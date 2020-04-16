@@ -62,7 +62,7 @@ R   81  77  76
 |II7 omit5|D|F#||C|
 |~~II~~7||F#|A|C|
 |IV|F|A|C||
-|V|C|E|G||
+|V|G|B|D||
 |V7|G|B|D|F|
 |V7 omit5|G|B||F|
 |~~V~~7||B|D|F|
