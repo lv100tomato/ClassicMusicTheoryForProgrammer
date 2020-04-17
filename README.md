@@ -170,6 +170,7 @@ chordを読んでいく際に小節線として `|:` や `:|` が現れるとき
  |  I   V   I   V
  |  I   V   VI  V
  |  I   I   IV  IV
+ |  I   V   VI  V
  |  I   IV  II  V
 :|  I   I   I   I
  |
