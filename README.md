@@ -14,7 +14,7 @@
 <bars>    ::= <line> | <line> \n <bar> \n <bar> \n <bar> \n <bar> \n <bars>
 <line>    ::= "|" | "|:" | ":|"
 <bar>     ::= <tone> | <tone> <tone> | <tone> <tone> <tone> <tone>
-<tone>    ::= <number> | (|"-")["0"-"9"]["A"-"G"](|"#"|"b") | "R" | "T"
+<tone>    ::= <number> | ["A"-"G"](|"-")["0"-"9"](|"#"|"b") | "R" | "T"
 ~~~
 
 ## 処理
