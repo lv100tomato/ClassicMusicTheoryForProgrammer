@@ -343,6 +343,12 @@ namespace ClassicMusicTheoryForProgrammer
 
                 ++index;
             }
+
+            if(preChord.GetChord() != Chord.I)
+            {
+                Console.WriteLine("音楽理論エラー：最後のコードは I である必要があります");
+                throw new MusicTheoryException();
+            }
         }
 
         private static void MakeMidi(string filename)
@@ -513,40 +519,6 @@ namespace ClassicMusicTheoryForProgrammer
 
                     tracksByte[i] = tracksByte[i].Concat(tracks[i]).ToArray();
                 }
-
-                /*
-                byte[][] tracksByte = new byte[][]
-                {
-                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
-                                 0x00, 0xC0, 40,
-                                 0x00, 0x90, 72,   0x7F,
-                                 0x01, 0x80, 72,   0x00,
-                                 0x00, 0x90, 72,   0x7F,
-                                 0x01, 0x80, 72,   0x00,
-                                 0x01, 0xFF, 0x2F, 0x00},
-                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
-                                 0x00, 0xC1, 40,
-                                 0x00, 0x91, 67,   0x7F,
-                                 0x01, 0x81, 67,   0x00,
-                                 0x00, 0x91, 67,   0x7F,
-                                 0x01, 0x81, 67,   0x00,
-                                 0x01, 0xFF, 0x2F, 0x00},
-                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
-                                 0x00, 0xC2, 41,
-                                 0x00, 0x92, 64,   0x7F,
-                                 0x01, 0x82, 64,   0x00,
-                                 0x00, 0x92, 64,   0x7F,
-                                 0x01, 0x82, 64,   0x00,
-                                 0x01, 0xFF, 0x2F, 0x00},
-                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
-                                 0x00, 0xC3, 42,
-                                 0x00, 0x93, 60,   0x7F,
-                                 0x01, 0x83, 60,   0x00,
-                                 0x00, 0x93, 60,   0x7F,
-                                 0x01, 0x83, 60,   0x00,
-                                 0x01, 0xFF, 0x2F, 0x00}
-                };
-                */
 
                 var output = (new byte[0]).Concat(header);
                 output = output.Concat(conduct);
