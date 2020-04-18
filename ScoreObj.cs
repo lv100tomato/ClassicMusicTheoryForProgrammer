@@ -50,9 +50,9 @@ namespace ClassicMusicTheoryForProgrammer
 
     class ChordObj : ScoreObj
     {
-        private Note[] voice;
+        public Note[] voice { get; private set; }
         private Chord? ch;
-        private ChordObj pre = null;
+        public ChordObj pre { get; private set; } = null;
 
         public ChordObj(Note soprano, Note alto, Note tenor, Note bass)
         {
@@ -408,7 +408,7 @@ namespace ClassicMusicTheoryForProgrammer
             }
         }
 
-        private int? NoteDetect(int pos)
+        public int? NoteDetect(int pos)
         {
             if (!(voice[pos].isT && pre is null) && !voice[pos].isR)
             {

@@ -22,14 +22,18 @@ namespace ClassicMusicTheoryForProgrammer
                 throw new Exception();
             }
 
+            string prop = "";
+
+            if(args.Length > 1)
+            {
+                prop = args[1];
+            }
+
             try
             {
                 using (StreamReader file = new StreamReader(args[0]))
                 {
-                    if(args.Length > 1)
-                    {
-                        if (args[1] == "-IgnoreTheoryEx") ignore = true;
-                    }
+                    if (prop == "-IgnoreTheoryEx" || prop == "-MakeMidi") ignore = true;
                     ReadAndInterpret(file);
                 }
             }
@@ -43,7 +47,14 @@ namespace ClassicMusicTheoryForProgrammer
                 throw e;
             }
 
-            RunSource();
+            if(prop == "-MakeMidi")
+            {
+                MakeMidi(Path.ChangeExtension(args[0], ".mid"));
+            }
+            else
+            {
+                RunSource();
+            }
         }
 
         private static string ReadAndCheck(StreamReader st)
@@ -332,6 +343,237 @@ namespace ClassicMusicTheoryForProgrammer
 
                 ++index;
             }
+        }
+
+        private static void MakeMidi(string filename)
+        {
+            using(FileStream midi = new FileStream(filename, FileMode.Create, FileAccess.Write))
+            {
+                byte[] header = new byte[] { 0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 6,
+                                             0x00, 0x01,
+                                             0x00, 0x05,
+                                             0x00, 0x01 };
+                int usec = (int)((long)60 * 1000000 / bpm);
+                byte[] byteInt = new byte[3];
+                for(int i = 2; i >= 0; --i)
+                {
+                    byteInt[i] = unchecked((byte)usec);
+                    usec /= 0x100;
+                }
+                byte[] conduct = new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 11,
+                                              0x00, 0xFF, 0x51, 0x03, byteInt[0], byteInt[1], byteInt[2],
+                                              0x00, 0xFF, 0x2F, 0x00};
+
+                List<byte>[] tracks = new List<byte>[] { new List<byte>(), new List<byte>(), new List<byte>(), new List<byte>() };
+                Stack<BarObj> loopMgr = new Stack<BarObj>();
+                ChordObj lastChord = null;
+                int index = 0;
+                int[] interval = new int[] { 0, 0, 0, 0 };
+
+                tracks[0].Add(0x00);
+                tracks[0].Add(0xC0);
+                tracks[0].Add(40);
+
+                tracks[1].Add(0x00);
+                tracks[1].Add(0xC1);
+                tracks[1].Add(40);
+
+                tracks[2].Add(0x00);
+                tracks[2].Add(0xC2);
+                tracks[2].Add(41);
+
+                tracks[3].Add(0x00);
+                tracks[3].Add(0xC3);
+                tracks[3].Add(42);
+
+                while (index < source.Length)
+                {
+                    if(source[index] is BarObj b)
+                    {
+                        if(b.bar == BarType.RepStart)
+                        {
+                            loopMgr.Push(b);
+                        }
+                        else if(b.bar == BarType.RepEnd)
+                        {
+                            if(loopMgr.Count > 0)
+                            {
+                                if (loopMgr.Peek() == b.GetPartner())
+                                {
+                                    BarObj st = loopMgr.Pop();
+                                    index = Array.IndexOf(source, st);
+                                }
+                            }
+                        }
+                    }
+                    else if(source[index] is ChordObj c)
+                    {
+                        lastChord = c;
+                        for(int i = 0; i < 4; ++i)
+                        {
+                            if (c.voice[i].isR)
+                            {
+                                if(c.pre.NoteDetect(i) is int num)
+                                {
+                                    byte[] value = IntToChangeableBytes(interval[i]);
+
+                                    for(int j = 0; j < value.Length; ++j)
+                                    {
+                                        tracks[i].Add(value[j]);
+                                    }
+                                    tracks[i].Add((byte)(0x80 + i));
+                                    tracks[i].Add((byte)num);
+                                    tracks[i].Add(0);
+
+                                    interval[i] = 0;
+                                }
+                            }
+                            else if (c.voice[i].isT)
+                            {
+                            }
+                            else
+                            {
+                                if (c.pre?.NoteDetect(i) is int num)
+                                {
+                                    byte[] value = IntToChangeableBytes(interval[i]);
+
+                                    for (int j = 0; j < value.Length; ++j)
+                                    {
+                                        tracks[i].Add(value[j]);
+                                    }
+                                    tracks[i].Add((byte)(0x80 + i));
+                                    tracks[i].Add((byte)num);
+                                    tracks[i].Add(0);
+
+                                    tracks[i].Add(0);
+                                }
+                                else
+                                {
+                                    byte[] value = IntToChangeableBytes(interval[i]);
+
+                                    for (int j = 0; j < value.Length; ++j)
+                                    {
+                                        tracks[i].Add(value[j]);
+                                    }
+                                }
+                                tracks[i].Add((byte)(0x90 + i));
+                                tracks[i].Add((byte)c.voice[i].num);
+                                tracks[i].Add((byte)0x7F);
+
+                                interval[i] = 0;
+                            }
+
+                            ++interval[i];
+                        }
+                    }
+
+                    ++index;
+                }
+
+                for(int i = 0; i < 4; ++i)
+                {
+                    if (lastChord.NoteDetect(i) is int num)
+                    {
+                        byte[] value = IntToChangeableBytes(interval[i]);
+
+                        for (int j = 0; j < value.Length; ++j)
+                        {
+                            tracks[i].Add(value[j]);
+                        }
+                        tracks[i].Add((byte)(0x80 + i));
+                        tracks[i].Add((byte)num);
+                        tracks[i].Add(0);
+
+                        interval[i] = 0;
+                    }
+
+                    tracks[i].Add(0x01);
+                    tracks[i].Add(0xFF);
+                    tracks[i].Add(0x2F);
+                    tracks[i].Add(0x00);
+                }
+
+                byte[][] tracksByte = new byte[][]
+                {
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00},
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00},
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00},
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00}
+                };
+
+                int[] length = new int[] { tracks[0].Count, tracks[1].Count, tracks[2].Count, tracks[3].Count };
+
+                for(int i = 0; i < 4; ++i)
+                {
+                    for (int j = 3; j >= 0; --j)
+                    {
+                        tracksByte[i][4 + j] = (byte)(length[i] % 0x100);
+                        length[i] /= 0x100;
+                    }
+
+                    tracksByte[i] = tracksByte[i].Concat(tracks[i]).ToArray();
+                }
+
+                /*
+                byte[][] tracksByte = new byte[][]
+                {
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
+                                 0x00, 0xC0, 40,
+                                 0x00, 0x90, 72,   0x7F,
+                                 0x01, 0x80, 72,   0x00,
+                                 0x00, 0x90, 72,   0x7F,
+                                 0x01, 0x80, 72,   0x00,
+                                 0x01, 0xFF, 0x2F, 0x00},
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
+                                 0x00, 0xC1, 40,
+                                 0x00, 0x91, 67,   0x7F,
+                                 0x01, 0x81, 67,   0x00,
+                                 0x00, 0x91, 67,   0x7F,
+                                 0x01, 0x81, 67,   0x00,
+                                 0x01, 0xFF, 0x2F, 0x00},
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
+                                 0x00, 0xC2, 41,
+                                 0x00, 0x92, 64,   0x7F,
+                                 0x01, 0x82, 64,   0x00,
+                                 0x00, 0x92, 64,   0x7F,
+                                 0x01, 0x82, 64,   0x00,
+                                 0x01, 0xFF, 0x2F, 0x00},
+                    new byte[] { 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 23,
+                                 0x00, 0xC3, 42,
+                                 0x00, 0x93, 60,   0x7F,
+                                 0x01, 0x83, 60,   0x00,
+                                 0x00, 0x93, 60,   0x7F,
+                                 0x01, 0x83, 60,   0x00,
+                                 0x01, 0xFF, 0x2F, 0x00}
+                };
+                */
+
+                var output = (new byte[0]).Concat(header);
+                output = output.Concat(conduct);
+                output = output.Concat(tracksByte[0]);
+                output = output.Concat(tracksByte[1]);
+                output = output.Concat(tracksByte[2]);
+                output = output.Concat(tracksByte[3]);
+
+                midi.Write(output.ToArray(), 0, output.Count());
+            }
+        }
+
+        private static byte[] IntToChangeableBytes(int x)
+        {
+            if (x < 0) return new byte[0];
+            if (x == 0) return new byte[] { 0 };
+
+            List<byte> outList = new List<byte>();
+            while(x > 0)
+            {
+                outList.Add(unchecked((byte)((x % 0x80) + (outList.Count == 0 ? 0 : 0x80))));
+                x /= 0x80;
+            }
+            outList.Reverse();
+
+            return outList.ToArray();
+
         }
 
         private static SimpleChord[][] commands = new SimpleChord[][]
