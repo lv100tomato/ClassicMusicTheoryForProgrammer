@@ -586,7 +586,7 @@ namespace ClassicMusicTheoryForProgrammer
             {
                 if (progs.Count == 2)
                 {
-                    if(comInd > 4) return null;
+                    if(comInd > 3) return null;
 
                     string name = ProgressionToString(progs[1].Item1);
 
