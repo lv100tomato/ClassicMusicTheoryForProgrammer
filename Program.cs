@@ -12,6 +12,7 @@ namespace ClassicMusicTheoryForProgrammer
         private static ScoreObj[] source = new ScoreObj[0];
         private static int[] sourceLine = new int[0];
         private static uint bpm = 96;
+        private static bool ignore = false;
 
         static void Main(string[] args)
         {
@@ -25,6 +26,10 @@ namespace ClassicMusicTheoryForProgrammer
             {
                 using (StreamReader file = new StreamReader(args[0]))
                 {
+                    if(args.Length > 1)
+                    {
+                        if (args[1] == "-IgnoreTheoryEx") ignore = true;
+                    }
                     ReadAndInterpret(file);
                 }
             }
@@ -69,7 +74,7 @@ namespace ClassicMusicTheoryForProgrammer
                 throw new Exception();
             }
 
-            first.Trim();
+            first = RemoveComments(first);
 
             if (first.Substring(0,1) == "|" || first.Substring(0, 1) == ":")
             {
@@ -82,7 +87,6 @@ namespace ClassicMusicTheoryForProgrammer
                 ++index;
             }
 
-            bool isPreBar = false;
 
             //ローカル関数
             void addSource(ScoreObj obj, int ind)
@@ -92,15 +96,20 @@ namespace ClassicMusicTheoryForProgrammer
             }
 
             Stack<(BarObj, int)> startBars = new Stack<(BarObj, int)>();
+            ChordObj lastChord = null;
+            bool isPreBar = false;
+            bool isPreRep = false;
+            bool isMusicEx = false;
 
             //ソースコード本体
-            while(!(line is null))
+            while (!(line is null))
             {
-                line.Trim();
+                line = RemoveComments(line);
 
                 if (line.Substring(0, 1) == "|" || line.Substring(0, 1) == ":")
                 {
                     //barを読み取り
+                    isPreRep = false;
 
                     if (isPreBar)
                     {
@@ -114,6 +123,8 @@ namespace ClassicMusicTheoryForProgrammer
                     {
                         bar = new BarObj(BarType.RepStart);
                         startBars.Push((bar, index));
+
+                        isPreRep = true;
                     }
                     else if (line == ":|")
                     {
@@ -127,6 +138,8 @@ namespace ClassicMusicTheoryForProgrammer
                         (BarObj pair, _) = startBars.Pop();
                         bar.SetPartner(pair);
                         pair.SetPartner(bar);
+
+                        isPreRep = true;
                     }
                     else if (line == "|")
                     {
@@ -206,10 +219,22 @@ namespace ClassicMusicTheoryForProgrammer
 
                     for (int i = 0; i < 4; ++i)
                     {
-                        addSource(new ChordObj(notes[0, i], notes[1, i], notes[2, i], notes[3, i]), index - 3);
+                        ChordObj nowChord = new ChordObj(notes[0, i], notes[1, i], notes[2, i], notes[3, i]);
+                        addSource(nowChord, index - 3);
+                        nowChord.SetPreChordObj(lastChord);
+                        try
+                        {
+                            nowChord.CheckMusicException(index - 3);
+                        }
+                        catch (MusicTheoryException e)
+                        {
+                            isMusicEx = true;
+                        }
+                        lastChord = nowChord;
                     }
 
                     isPreBar = false;
+                    isPreRep = false;
                 }
 
                 line = st.ReadLine();
@@ -227,6 +252,11 @@ namespace ClassicMusicTheoryForProgrammer
                 (_, int barInd) = startBars.Pop();
                 Console.WriteLine("文法エラー：対応するbarが存在しません(" + barInd + "行)");
                 throw new Exception();
+            }
+
+            if (isMusicEx && !ignore)
+            {
+                throw new MusicTheoryException();
             }
 
             source = sourceList.ToArray();
@@ -248,6 +278,10 @@ namespace ClassicMusicTheoryForProgrammer
                 if(source[index] is ChordObj ch)
                 {
                     ch.SetPreChordObj(preChord);
+                    if (!ignore)
+                    {
+                        ch.CheckMusicException(sourceLine[Array.IndexOf(source, preChord ?? ch)]);
+                    }
                     SimpleChord sChord = ChordToSimpleChord(ch.GetChord());
 
                     //Console.Write(sChord.ToString() + " ");
@@ -414,20 +448,6 @@ namespace ClassicMusicTheoryForProgrammer
             throw new Exception();
         }
 
-        private static string ProgressionToString(SimpleChord[] prog)
-        {
-            StringBuilder build = new StringBuilder();
-            for(int i = 0; i < prog.Length; ++i)
-            {
-                build.Append(prog[i].ToString());
-                if (i < prog.Length - 1)
-                {
-                    build.Append("-");
-                }
-            }
-            return build.ToString();
-        }
-
         private static void DetectBPM(string st)
         {
             if(st.Contains("BPM") || st.Contains("bpm"))
@@ -500,6 +520,13 @@ namespace ClassicMusicTheoryForProgrammer
                         throw new Exception();
                 }
             }
+        }
+
+        private static string RemoveComments(string origin)
+        {
+            int st = origin.IndexOf("//");
+            if (st < 0) return origin;
+            return origin.Substring(0, st).Trim();
         }
 
         private static Note StringToNote(string st)
@@ -590,6 +617,20 @@ namespace ClassicMusicTheoryForProgrammer
             }
 
             throw new Exception();
+        }
+
+        private static string ProgressionToString(SimpleChord[] prog)
+        {
+            StringBuilder build = new StringBuilder();
+            for (int i = 0; i < prog.Length; ++i)
+            {
+                build.Append(prog[i].ToString());
+                if (i < prog.Length - 1)
+                {
+                    build.Append("-");
+                }
+            }
+            return build.ToString();
         }
 
         private static SimpleChord ChordToSimpleChord(Chord c)
