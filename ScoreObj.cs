@@ -88,10 +88,17 @@ namespace ClassicMusicTheoryForProgrammer
                 }
             }
 
-            for(int i=0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
             {
                 bool isEx = CheckLimitedProgNoteException(i);
-                if(isEx) Console.WriteLine("音楽理論エラー：限定進行音に反しています(" + (line + i) + "行)");
+                if (isEx) Console.WriteLine("音楽理論エラー：限定進行音に反しています(" + (line + i) + "行)");
+                ex = ex || isEx;
+            }
+
+            for (int i = 0; i < 4; ++i)
+            {
+                bool isEx = CheckAbnormalChangeException(i);
+                if (isEx) Console.WriteLine("音楽理論エラー：不自然な音程の移動です(" + (line + i) + "行)");
                 ex = ex || isEx;
             }
 
@@ -219,6 +226,21 @@ namespace ClassicMusicTheoryForProgrammer
             {
                 return false;
             }
+        }
+
+        private bool CheckAbnormalChangeException(int vo)
+        {
+            if (voice[vo].isT || voice[vo].isR) return false;
+            int nn = voice[vo].num;
+
+            if (pre is null) return false;
+            int? preNum = pre.NoteDetect(vo);
+            if(preNum is int preNn)
+            {
+                if (Math.Abs(nn - preNn) > 9 && Math.Abs(nn - preNn) != 12) return true;
+            }
+
+            return false;
         }
 
         private bool CheckProgressionException()
