@@ -372,9 +372,9 @@ namespace ClassicMusicTheoryForProgrammer
 
                 List<byte>[] tracks = new List<byte>[] { new List<byte>(), new List<byte>(), new List<byte>(), new List<byte>() };
                 Stack<BarObj> loopMgr = new Stack<BarObj>();
-                ChordObj lastChord = null;
                 int index = 0;
                 int[] interval = new int[] { 0, 0, 0, 0 };
+                int?[] lastNn = new int?[] { null, null, null, null };
 
                 tracks[0].Add(0x00);
                 tracks[0].Add(0xC0);
@@ -414,12 +414,11 @@ namespace ClassicMusicTheoryForProgrammer
                     }
                     else if(source[index] is ChordObj c)
                     {
-                        lastChord = c;
                         for(int i = 0; i < 4; ++i)
                         {
                             if (c.voice[i].isR)
                             {
-                                if(c.pre.NoteDetect(i) is int num)
+                                if(lastNn[i] is int num)
                                 {
                                     byte[] value = IntToChangeableBytes(interval[i]);
 
@@ -432,6 +431,7 @@ namespace ClassicMusicTheoryForProgrammer
                                     tracks[i].Add(0);
 
                                     interval[i] = 0;
+                                    lastNn[i] = null;
                                 }
                             }
                             else if (c.voice[i].isT)
@@ -439,7 +439,7 @@ namespace ClassicMusicTheoryForProgrammer
                             }
                             else
                             {
-                                if (c.pre?.NoteDetect(i) is int num)
+                                if (lastNn[i] is int num)
                                 {
                                     byte[] value = IntToChangeableBytes(interval[i]);
 
@@ -467,6 +467,7 @@ namespace ClassicMusicTheoryForProgrammer
                                 tracks[i].Add((byte)0x7F);
 
                                 interval[i] = 0;
+                                lastNn[i] = c.voice[i].num;
                             }
 
                             ++interval[i];
@@ -478,7 +479,7 @@ namespace ClassicMusicTheoryForProgrammer
 
                 for(int i = 0; i < 4; ++i)
                 {
-                    if (lastChord.NoteDetect(i) is int num)
+                    if (lastNn[i] is int num)
                     {
                         byte[] value = IntToChangeableBytes(interval[i]);
 
