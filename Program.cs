@@ -18,7 +18,7 @@ namespace ClassicMusicTheoryForProgrammer
         {
             if(args.Length < 1)
             {
-                Console.WriteLine("ファイルを指定してください");
+                Console.Error.WriteLine("ファイルを指定してください");
                 throw new Exception();
             }
 
@@ -43,7 +43,7 @@ namespace ClassicMusicTheoryForProgrammer
                                       e is DirectoryNotFoundException ||
                                       e is IOException)
             {
-                Console.WriteLine("ファイルを開けません : " + args[0]);
+                Console.Error.WriteLine("ファイルを開けません : " + args[0]);
                 throw e;
             }
 
@@ -62,7 +62,7 @@ namespace ClassicMusicTheoryForProgrammer
             string read = st.ReadLine();
             if(read == null)
             {
-                Console.WriteLine("ソースコードが不正です");
+                Console.Error.WriteLine("ソースコードが不正です");
                 throw new Exception();
             }
             else
@@ -81,7 +81,7 @@ namespace ClassicMusicTheoryForProgrammer
 
             if(first is null)
             {
-                Console.WriteLine("ファイルが空です");
+                Console.Error.WriteLine("ファイルが空です");
                 throw new Exception();
             }
 
@@ -124,7 +124,7 @@ namespace ClassicMusicTheoryForProgrammer
 
                     if (isPreBar)
                     {
-                        Console.WriteLine("文法エラー：不明なシンボルです(" + index + "行)");
+                        Console.Error.WriteLine("文法エラー：不明なシンボルです(" + index + "行)");
                         throw new Exception();
                     }
 
@@ -141,7 +141,7 @@ namespace ClassicMusicTheoryForProgrammer
                     {
                         if(startBars.Count == 0)
                         {
-                            Console.WriteLine("文法エラー：対応するbarが存在しません(" + index + "行)");
+                            Console.Error.WriteLine("文法エラー：対応するbarが存在しません(" + index + "行)");
                             throw new Exception();
                         }
 
@@ -158,7 +158,7 @@ namespace ClassicMusicTheoryForProgrammer
                     }
                     else
                     {
-                        Console.WriteLine("文法エラー：不明なシンボルです(" + index + "行)");
+                        Console.Error.WriteLine("文法エラー：不明なシンボルです(" + index + "行)");
                         throw new Exception();
                     }
 
@@ -178,7 +178,7 @@ namespace ClassicMusicTheoryForProgrammer
 
                         if(voice[i] is null)
                         {
-                            Console.WriteLine("文法エラー：ソースコードの最後が不正です(" + index + "行)");
+                            Console.Error.WriteLine("文法エラー：ソースコードの最後が不正です(" + index + "行)");
                             throw new Exception();
                         }
 
@@ -193,7 +193,7 @@ namespace ClassicMusicTheoryForProgrammer
 
                         if(tones.Length == 0 || tones.Length == 3 || tones.Length > 4)
                         {
-                            Console.WriteLine("文法エラー：toneの個数が不正です(" + (index + i - 3) + "行)");
+                            Console.Error.WriteLine("文法エラー：toneの個数が不正です(" + (index + i - 3) + "行)");
                             throw new Exception();
                         }
 
@@ -223,7 +223,7 @@ namespace ClassicMusicTheoryForProgrammer
                         }
                         catch
                         {
-                            Console.WriteLine("文法エラー：不明なシンボルです(" + (index + i - 3) + "行)");
+                            Console.Error.WriteLine("文法エラー：不明なシンボルです(" + (index + i - 3) + "行)");
                             throw new Exception();
                         }
                     }
@@ -254,14 +254,14 @@ namespace ClassicMusicTheoryForProgrammer
 
             if (!isPreBar)
             {
-                Console.WriteLine("文法エラー：ソースコードの最後が不正です(" + index + "行)");
+                Console.Error.WriteLine("文法エラー：ソースコードの最後が不正です(" + index + "行)");
                 throw new Exception();
             }
 
             if(startBars.Count > 0)
             {
                 (_, int barInd) = startBars.Pop();
-                Console.WriteLine("文法エラー：対応するbarが存在しません(" + barInd + "行)");
+                Console.Error.WriteLine("文法エラー：対応するbarが存在しません(" + barInd + "行)");
                 throw new Exception();
             }
 
@@ -346,7 +346,7 @@ namespace ClassicMusicTheoryForProgrammer
 
             if(preChord.GetChord() != Chord.I)
             {
-                Console.WriteLine("音楽理論エラー：最後のコードは I である必要があります");
+                Console.Error.WriteLine("音楽理論エラー：最後のコードは I である必要があります");
                 throw new MusicTheoryException();
             }
         }
@@ -654,12 +654,12 @@ namespace ClassicMusicTheoryForProgrammer
             }
             catch(KeyNotFoundException)
             {
-                Console.WriteLine("実行時エラー：宣言されていない変数が呼ばれました(" + progs[0].Item2 + "行)");
+                Console.Error.WriteLine("実行時エラー：宣言されていない変数が呼ばれました(" + progs[0].Item2 + "行)");
                 throw new Exception();
             }
 
             error:
-            Console.WriteLine("実行時エラー：progressionに対応する命令が存在しません(" + progs[0].Item2 + "行)");
+            Console.Error.WriteLine("実行時エラー：progressionに対応する命令が存在しません(" + progs[0].Item2 + "行)");
             throw new Exception();
         }
 
@@ -674,7 +674,7 @@ namespace ClassicMusicTheoryForProgrammer
                 }
                 catch(Exception e)
                 {
-                    Console.WriteLine("BPMの値が不正です");
+                    Console.Error.WriteLine("BPMの値が不正です");
                     throw e;
                 }
             }
@@ -731,7 +731,7 @@ namespace ClassicMusicTheoryForProgrammer
                         bpm = 208;
                         break;
                     default:
-                        Console.WriteLine("テンポの指定が不正です");
+                        Console.Error.WriteLine("テンポの指定が不正です");
                         throw new Exception();
                 }
             }

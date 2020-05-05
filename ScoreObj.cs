@@ -82,8 +82,8 @@ namespace ClassicMusicTheoryForProgrammer
                 for(int j = 0; j < 4; ++j)
                 {
                     (bool c5, bool c8) = NoteContinuous5or8(i, j, true);
-                    if (c5) Console.WriteLine("音楽理論エラー：連続五度です(" + (line + i) + "行)");
-                    if (c8) Console.WriteLine("音楽理論エラー：連続八度です(" + (line + i) + "行)");
+                    if (c5) Console.Error.WriteLine("音楽理論エラー：連続五度です(" + (line + i) + "行)");
+                    if (c8) Console.Error.WriteLine("音楽理論エラー：連続八度です(" + (line + i) + "行)");
                     ex = ex || c5 || c8;
                 }
             }
@@ -91,19 +91,19 @@ namespace ClassicMusicTheoryForProgrammer
             for (int i = 0; i < 4; ++i)
             {
                 bool isEx = CheckLimitedProgNoteException(i);
-                if (isEx) Console.WriteLine("音楽理論エラー：限定進行音に反しています(" + (line + i) + "行)");
+                if (isEx) Console.Error.WriteLine("音楽理論エラー：限定進行音に反しています(" + (line + i) + "行)");
                 ex = ex || isEx;
             }
 
             for (int i = 0; i < 4; ++i)
             {
                 bool isEx = CheckAbnormalChangeException(i);
-                if (isEx) Console.WriteLine("音楽理論エラー：不自然な音程の移動です(" + (line + i) + "行)");
+                if (isEx) Console.Error.WriteLine("音楽理論エラー：不自然な音程の移動です(" + (line + i) + "行)");
                 ex = ex || isEx;
             }
 
             bool chEx = CheckProgressionException();
-            if(chEx) Console.WriteLine("音楽理論エラー：chordの進行先が不正です(" + line + "-" + (line + 3) + "行)");
+            if(chEx) Console.Error.WriteLine("音楽理論エラー：chordの進行先が不正です(" + line + "-" + (line + 3) + "行)");
             ex = ex || chEx;
 
             if (ex) throw new MusicTheoryException();
@@ -121,7 +121,7 @@ namespace ClassicMusicTheoryForProgrammer
                                      (nn[3] is null || num[1] > num[3])   )) &&
                   (nn[2] is null || ((nn[3] is null || num[2] > num[3])   ))    ))
             {
-                if (message) Console.Write("音楽理論エラー：上の声部より音高が高くなっています");
+                if (message) Console.Error.Write("音楽理論エラー：上の声部より音高が高くなっています");
                 throw new MusicTheoryException();
             }
 
@@ -130,7 +130,7 @@ namespace ClassicMusicTheoryForProgrammer
                  (nn[2] is null || (num[2] <= 84 && num[2] >= 48)) &&
                  (nn[3] is null || (num[3] <= 72 && num[3] >= 36))   ))
             {
-                if (message) Console.Write("音楽理論エラー：声部の音域に収まっていません");
+                if (message) Console.Error.Write("音楽理論エラー：声部の音域に収まっていません");
                 throw new MusicTheoryException();
             }
         }
@@ -383,7 +383,7 @@ namespace ClassicMusicTheoryForProgrammer
                     }
                     else
                     {
-                        Console.WriteLine("エラー：chordに変換できません");
+                        Console.Error.WriteLine("エラー：chordに変換できません");
                         throw new Exception();
                     }
                 }
@@ -391,7 +391,7 @@ namespace ClassicMusicTheoryForProgrammer
 
             if (!isOne)
             {
-                Console.WriteLine("エラー：chordに変換できません");
+                Console.Error.WriteLine("エラー：chordに変換できません");
                 throw new Exception();
             }
 
